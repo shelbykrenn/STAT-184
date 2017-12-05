@@ -35,3 +35,6 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 ### Support or Contact
 
 Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+
+### STAT 184 Final Project 
+[Here](Final.html) , you can find the html link to my project from STAT 184. In this project, I compared the different types of accidents that have occured to airplanes and how many deaths they resulted in.
