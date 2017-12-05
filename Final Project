@@ -1,0 +1,127 @@
+---
+title: "Final Project"
+author: "Shelby Krenn"
+date: "12.05.17"
+output: 
+  html_document:
+    fig_height: 3
+    fig_width: 5
+---
+<!-- Don't edit in between this line and the one below -->
+```{r include=FALSE}
+# Don't delete this chunk if you are using the DataComputing package
+library(DataComputing)
+library("rvest")
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+library(mosaic)
+library(knitr)
+```
+*Source file* 
+```{r, results='asis', echo=FALSE}
+includeSourceDocuments()
+```
+<!-- Don't edit the material above this line -->
+
+
+```{r, echo = FALSE}
+page <- "https://en.wikipedia.org/wiki/List_of_aircraft_accidents_and_incidents_resulting_in_at_least_50_fatalities"
+XPATH <- '//*[@id="mw-content-text"]/div/table[1]'
+
+table_list <- page %>%
+  read_html() %>%
+  html_nodes(xpath = XPATH) %>%
+  html_table(fill = TRUE)
+```
+
+```{r, echo = FALSE}
+AccidentStats <-
+  table_list[[1]]
+```
+
+```{r, echo = FALSE}
+  colnames(AccidentStats) <-
+  c("Total Deaths" , "Crew Deaths" , "Passenger Deaths" , "Ground Deaths" , "Notes" , "Type" , "Incident" , "Aircraft" , "Location" , "Phase" , "Airport" , "Distance" , "Date" )
+```
+
+```{r, echo = FALSE}
+AccidentStats$Notes <- NULL
+AccidentStats$Distance <- NULL
+AccidentStats$Phase <- NULL
+AccidentStats$`Total Deaths` <- NULL
+AccidentStats$Aircraft <- NULL
+AccidentStats$Incident <- NULL
+AccidentStats$Location <- NULL
+AccidentStats$Airport <- NULL
+AccidentStats$`Ground Deaths` <- NULL
+```
+
+```{r, echo = FALSE}
+ShortStats <-
+AccidentStats %>% 
+  filter(row_number() != 1) 
+```
+
+```{r, echo = FALSE}
+NumberStats <-
+  ShortStats[-c(93, 203), ]
+```
+
+```{r, echo = FALSE}
+NumberStats["Deaths"] <- NA
+
+NumberStats$Deaths <- 
+  (as.numeric(NumberStats$`Crew Deaths`) + as.numeric(NumberStats$`Passenger Deaths`))
+```
+
+```{r, echo = FALSE}
+GoodStats <-
+NumberStats %>%
+  mutate(Type = gsub("INH", "Hijacking", Type)) %>% 
+  mutate(Type = gsub("COM", "Commercial", Type)) %>% 
+  mutate(Type = gsub("MIL", "Military", Type)) %>% 
+  mutate(Type = gsub("INB", "Bombing", Type)) %>% 
+  mutate(Type = gsub("EXG", "Ground Attack", Type)) %>% 
+  mutate(Type = gsub("EXS", "Air Attack", Type))
+```
+
+```{r, echo = FALSE, warning = FALSE}
+GoodStats$Date <-
+  format(as.Date(GoodStats$Date), "%Y/%m/%d")
+```
+
+##Accident Statistics
+In the following data table, over 500 aircraft accidents with at least 50 casualities are documented. More specifically, both crew and passenger deaths, type of accident, and the date of the occurence are the variables being examined. Only the head of the 500 observations are shown here.
+
+```{r, echo = FALSE}
+kable(head(GoodStats))
+```
+
+##Occurence of Accidents by Type
+As demostrated by this bar graph, commercial accidents have been the most common type of accident between now and the early 1900's.
+
+```{r, fig.width = 7, fig.height = 5, echo = FALSE}
+GoodStats %>% 
+  ggplot(aes(x = Type)) +
+  geom_bar(aes(fill = Deaths > 100))
+```
+
+##Deaths by Accident Type
+Below are six density plots, demostrating how likely each type of accident is to have a specific amount of deaths.
+
+```{r, fig.height = 5, fig.width = 10, echo = FALSE}
+GoodStats %>% 
+ggplot(aes(x = Deaths)) + 
+  geom_density(adjust = 0.4) + 
+  facet_wrap(~ Type, ncol = 4) 
+```
+
+##Number of Deaths per Day via Accident
+In the following line graph, each day within the 1923-2017 data compiled is number and the number of deaths that occured on that given day are plotted.
+
+```{r, fig.width = 15, fig.height = 4, echo = FALSE}
+GoodStats %>% 
+ggplot(aes(x = yday(Date), y = Deaths)) +
+  geom_line()
+```
